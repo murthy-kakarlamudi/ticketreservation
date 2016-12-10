@@ -32,18 +32,29 @@ public class TestTicketService extends TestCase{
 		//Make sure OPEN seats are less by the count that was put on hold
 		assertEquals(12-HOLD_SEATS,testTicketService.numSeatsAvailable());
 	}
-
-//	public static void main(String[] args) throws Exception {
-//		TicketServiceImpl testTicketService = new TicketServiceImpl();
-//		System.out.println(testTicketService.numSeatsAvailable());
-//		
-//		SeatHold seatHold = testTicketService.findAndHoldSeats(2, "test1@gmail.com");
-//		seatHold.getSeatsPutInHold().forEach(seat -> System.out.println(seat.getSeatNumber()));
-//		
+	
+	@Test
+	public void testAfterThresholdTimeExpiresHoldShouldBeRemoved() throws Exception {
+		int HOLD_SEATS = 2;
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		SeatHold seatHold = testTicketService.findAndHoldSeats(HOLD_SEATS, "test1@gmail.com");
+		
+		assertEquals(1, seatHold.getSeatsPutInHold().get(0).getSeatNumber());
+		assertEquals(2, seatHold.getSeatsPutInHold().get(1).getSeatNumber());
+		
 //		Thread.sleep(1*60*1000);
 //		
-//		seatHold = testTicketService.findAndHoldSeats(2, "test2@gmail.com");
-//		seatHold.getSeatsPutInHold().forEach(seat -> System.out.println(seat.getSeatNumber()));
-//	}
+//		seatHold = testTicketService.findAndHoldSeats(HOLD_SEATS, "test2@gmail.com");
+//		
+//		assertEquals(1, seatHold.getSeatsPutInHold().get(0).getSeatNumber());
+//		assertEquals(2, seatHold.getSeatsPutInHold().get(1).getSeatNumber());
+	}
+	
+	@Test
+	public void testReserveSeatsForNonExistingHoldIdShouldFail(){
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.reserveSeats(123, "test1@gmail.com");
+	}
+
 
 }

@@ -1,6 +1,7 @@
 package com.demo.ticketreservation.impl;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 import com.demo.ticketreservation.api.TicketService;
 import com.demo.ticketreservation.models.Seat;
@@ -8,22 +9,51 @@ import com.demo.ticketreservation.models.SeatHold;
 import com.demo.ticketreservation.models.Stadium;
 import com.demo.ticketreservation.utils.SeatStatus;
 
+/*
+ * Implements TicketService Interface
+ */
 public class TicketServiceImpl implements TicketService {
-	
+	/*
+	 * Holds the number of seat rows in the stadium
+	 */
 	private final int ROWCOUNT = 3;
+	
+	/*
+	 * Holds the number of seats available in each row
+	 */
 	private final int COLUMNCOUNT = 4;
+	
+	/*
+	 * Time to wait till the hold put on the seats is removed
+	 */
 	private final int ONE_MINUTE = 1;
 	
+	/*
+	 * Object to hold the stadium with seats
+	 */
 	private Stadium stadium;
 	
-	private HashMap<Double,SeatHold> seatsHoldMap;
+	/*
+	 * Temporary data structure to hold information about the seats that were temporarily put on hold
+	 */
+	private HashMap<Integer,SeatHold> seatsHoldMap;
 	
+	/*
+	 * Default Constructor
+	 */
 	public TicketServiceImpl(){
 		stadium = new Stadium(ROWCOUNT,COLUMNCOUNT);
-		seatsHoldMap = new HashMap<Double,SeatHold>();
+		seatsHoldMap = new HashMap<Integer,SeatHold>();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.demo.ticketreservation.api.TicketService#numSeatsAvailable()
+	 */
 	public int numSeatsAvailable() {
+		
+		validateHoldTime();
+		
 		int retSeatCount = 0;
 		Seat[][] seats = stadium.getSeats();
 		for(int rowIndex=0; rowIndex < ROWCOUNT; rowIndex++){
@@ -35,6 +65,10 @@ public class TicketServiceImpl implements TicketService {
 		return retSeatCount;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.demo.ticketreservation.api.TicketService#findAndHoldSeats(int, java.lang.String)
+	 */
 	public SeatHold findAndHoldSeats(int numSeats, String customerEmail){
 		
 		validateHoldTime();
@@ -74,11 +108,30 @@ public class TicketServiceImpl implements TicketService {
 		return seatHold;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.demo.ticketreservation.api.TicketService#reserveSeats(int, java.lang.String)
+	 */
 	public String reserveSeats(int seatHoldId, String customerEmail) {
-		// TODO Auto-generated method stub
+		for(Integer holdSetId : seatsHoldMap.keySet()){
+			SeatHold seatHold = seatsHoldMap.get(holdSetId);
+			if(seatHold == null){
+				return "Reservation cannot be done. The temporary hold put on the seats expired.";
+			} else if(!seatHold.getCustomerEmail().equalsIgnoreCase(customerEmail)) {
+				return "Reservation cannot be done. The email on temporary hold: "+seatHold.getCustomerEmail()+" does not match the email provided: "+customerEmail;
+			} else {
+				seatsHoldMap.remove(seatHoldId);
+				for(Seat seat : seatHold.getSeatsPutInHold())
+					seat.setStatus(SeatStatus.RESERVED);
+				return UUID.randomUUID().toString();
+			}
+		}
 		return null;
 	}
 	
+	/*
+	 * Utility method that determines if adjacent seats are available and holds them
+	 */
 	private boolean findAdjacentSeats(int rowIndex, int columnIndex, int numSeats, SeatHold seatHold) {
 		int adjEmptySeatCount = 0;
 		if(columnIndex+numSeats <= COLUMNCOUNT){
@@ -99,8 +152,11 @@ public class TicketServiceImpl implements TicketService {
 		return false;
 	}
 	
+	/*
+	 * Utility method that checks if the time at which seats that were put on hold 
+	 */
 	private void validateHoldTime(){
-		for(Double holdSetId : seatsHoldMap.keySet()){
+		for(Integer holdSetId : seatsHoldMap.keySet()){
 			SeatHold seatHold = seatsHoldMap.get(holdSetId);
 			if((System.currentTimeMillis() - seatHold.getHoldCreateTime())/(60*1000) >= ONE_MINUTE){
 				seatsHoldMap.remove(holdSetId);

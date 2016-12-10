@@ -2,11 +2,12 @@ package com.demo.ticketreservation.models;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Random;
 import java.text.SimpleDateFormat;
 
 public class SeatHold {
 
-	private double seatHoldId;
+	private int seatHoldId;
 	
 	private ArrayList<Seat> seatsPutInHold;
 	
@@ -19,16 +20,16 @@ public class SeatHold {
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 	
 	public SeatHold(){
-		seatHoldId = Math.random();
+		seatHoldId = (new Random()).nextInt(100);
 		seatsPutInHold = new ArrayList<Seat>();
 		holdCreateTime = new Timestamp(System.currentTimeMillis());
 	}
 
-	public double getSeatHoldId() {
+	public int getSeatHoldId() {
 		return seatHoldId;
 	}
 
-	public void setSeatHoldId(double seatHoldId) {
+	public void setSeatHoldId(int seatHoldId) {
 		this.seatHoldId = seatHoldId;
 	}
 
