@@ -14,6 +14,8 @@ public class SeatHold {
 	
 	private String customerEmail;
 	
+	private String errorMessage;
+	
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 	
 	public SeatHold(){
@@ -41,6 +43,10 @@ public class SeatHold {
 	public void addToSeatsPutInHold(Seat seatIn){
 		seatsPutInHold.add(seatIn);
 	}
+	
+	public long getHoldCreateTime(){
+		return holdCreateTime.getTime();
+	}
 
 	public String getHoldCreateTimePrettyFormat() {
 		return sdf.format(holdCreateTime);
@@ -56,6 +62,14 @@ public class SeatHold {
 
 	public void setCustomerEmail(String customerEmail) {
 		this.customerEmail = customerEmail;
+	}
+
+	public String getErrorMessage() {
+		return errorMessage;
+	}
+
+	public void setErrorMessage(String errorMessage) {
+		this.errorMessage = errorMessage;
 	}
 	
 	
