@@ -53,7 +53,8 @@ public class TestTicketService extends TestCase{
 	@Test
 	public void testReserveSeatsForNonExistingHoldIdShouldFail(){
 		TicketServiceImpl testTicketService = new TicketServiceImpl();
-		testTicketService.reserveSeats(123, "test1@gmail.com");
+		String code = testTicketService.reserveSeats(123, "test1@gmail.com");
+		assertEquals("Reservation cannot be done. Seat Hold Id that was supplied is not found.",code);
 	}
 
 

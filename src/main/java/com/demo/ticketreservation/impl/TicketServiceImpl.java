@@ -38,12 +38,15 @@ public class TicketServiceImpl implements TicketService {
 	 */
 	private HashMap<Integer,SeatHold> seatsHoldMap;
 	
+	private HashMap<Integer,SeatHold> expiredSeatsHoldMap;
+	
 	/*
 	 * Default Constructor
 	 */
 	public TicketServiceImpl(){
 		stadium = new Stadium(ROWCOUNT,COLUMNCOUNT);
 		seatsHoldMap = new HashMap<Integer,SeatHold>();
+		expiredSeatsHoldMap = new HashMap<Integer,SeatHold>();
 	}
 
 	/*
@@ -113,20 +116,21 @@ public class TicketServiceImpl implements TicketService {
 	 * @see com.demo.ticketreservation.api.TicketService#reserveSeats(int, java.lang.String)
 	 */
 	public String reserveSeats(int seatHoldId, String customerEmail) {
-		for(Integer holdSetId : seatsHoldMap.keySet()){
-			SeatHold seatHold = seatsHoldMap.get(holdSetId);
-			if(seatHold == null){
+		SeatHold seatHold = seatsHoldMap.get(seatHoldId);
+		if(seatHold == null){
+			if(expiredSeatsHoldMap.get(seatHoldId) != null)
 				return "Reservation cannot be done. The temporary hold put on the seats expired.";
-			} else if(!seatHold.getCustomerEmail().equalsIgnoreCase(customerEmail)) {
-				return "Reservation cannot be done. The email on temporary hold: "+seatHold.getCustomerEmail()+" does not match the email provided: "+customerEmail;
-			} else {
-				seatsHoldMap.remove(seatHoldId);
-				for(Seat seat : seatHold.getSeatsPutInHold())
-					seat.setStatus(SeatStatus.RESERVED);
-				return UUID.randomUUID().toString();
-			}
+			else
+				return "Reservation cannot be done. Seat Hold Id that was supplied is not found.";
+		} else if(!seatHold.getCustomerEmail().equalsIgnoreCase(customerEmail)) {
+			return "Reservation cannot be done. The email on temporary hold: "+seatHold.getCustomerEmail()+" does not match the email provided: "+customerEmail;
+		} else {
+			seatsHoldMap.remove(seatHoldId);
+			for(Seat seat : seatHold.getSeatsPutInHold())
+				seat.setStatus(SeatStatus.RESERVED);
+			return UUID.randomUUID().toString();
 		}
-		return null;
+		
 	}
 	
 	/*
@@ -160,6 +164,7 @@ public class TicketServiceImpl implements TicketService {
 			SeatHold seatHold = seatsHoldMap.get(holdSetId);
 			if((System.currentTimeMillis() - seatHold.getHoldCreateTime())/(60*1000) >= ONE_MINUTE){
 				seatsHoldMap.remove(holdSetId);
+				expiredSeatsHoldMap.put(holdSetId,seatHold);
 				for(Seat seat : seatHold.getSeatsPutInHold()){
 					seat.setStatus(SeatStatus.OPEN);
 				}
