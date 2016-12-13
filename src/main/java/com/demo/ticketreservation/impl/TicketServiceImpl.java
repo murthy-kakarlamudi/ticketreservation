@@ -3,35 +3,30 @@ package com.demo.ticketreservation.impl;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
 import com.demo.ticketreservation.api.TicketService;
+import com.demo.ticketreservation.exceptions.EmailValidationException;
+import com.demo.ticketreservation.exceptions.ReservationException;
+import com.demo.ticketreservation.exceptions.SeatHoldException;
 import com.demo.ticketreservation.models.Seat;
 import com.demo.ticketreservation.models.SeatHold;
-import com.demo.ticketreservation.models.Stadium;
+import com.demo.ticketreservation.models.Venue;
+import com.demo.ticketreservation.utils.Constants;
 import com.demo.ticketreservation.utils.SeatStatus;
+import org.apache.commons.validator.routines.EmailValidator;
 
 /*
  * Implements TicketService Interface
  */
+@Service
 public class TicketServiceImpl implements TicketService {
-	/*
-	 * Holds the number of seat rows in the stadium
-	 */
-	private final int ROWCOUNT = 3;
+	
 	
 	/*
-	 * Holds the number of seats available in each row
+	 * Object to hold the Venue with seats
 	 */
-	private final int COLUMNCOUNT = 4;
+	private Venue venue;
 	
-	/*
-	 * Time to wait till the hold put on the seats is removed
-	 */
-	private final int ONE_MINUTE = 1;
-	
-	/*
-	 * Object to hold the stadium with seats
-	 */
-	private Stadium stadium;
 	
 	/*
 	 * Temporary data structure to hold information about the seats that were temporarily put on hold
@@ -44,7 +39,15 @@ public class TicketServiceImpl implements TicketService {
 	 * Default Constructor
 	 */
 	public TicketServiceImpl(){
-		stadium = new Stadium(ROWCOUNT,COLUMNCOUNT);
+		venue = Venue.getInstance();
+		venue.initSeats();
+		seatsHoldMap = new HashMap<Integer,SeatHold>();
+		expiredSeatsHoldMap = new HashMap<Integer,SeatHold>();
+	}
+	
+	public TicketServiceImpl(int rowCount, int seatsPerRow){
+		venue = Venue.getInstance();
+		venue.initSeats(rowCount,seatsPerRow);
 		seatsHoldMap = new HashMap<Integer,SeatHold>();
 		expiredSeatsHoldMap = new HashMap<Integer,SeatHold>();
 	}
@@ -57,15 +60,7 @@ public class TicketServiceImpl implements TicketService {
 		
 		validateHoldTime();
 		
-		int retSeatCount = 0;
-		Seat[][] seats = stadium.getSeats();
-		for(int rowIndex=0; rowIndex < ROWCOUNT; rowIndex++){
-			for(int columnIndex = 0; columnIndex < COLUMNCOUNT; columnIndex++){
-				if(seats[rowIndex][columnIndex].getStatus() == SeatStatus.OPEN)
-					retSeatCount++;
-			}
-		}
-		return retSeatCount;
+		return venue.getOpenSeats();
 	}
 
 	/*
@@ -73,13 +68,19 @@ public class TicketServiceImpl implements TicketService {
 	 * @see com.demo.ticketreservation.api.TicketService#findAndHoldSeats(int, java.lang.String)
 	 */
 	public SeatHold findAndHoldSeats(int numSeats, String customerEmail){
+		//Check if the input email is valid
+		if(!EmailValidator.getInstance().isValid(customerEmail))
+			throw new EmailValidationException("Email address is not valid");
 		
 		validateHoldTime();
 		
+		if(numSeatsAvailable() < numSeats)
+			throw new SeatHoldException("Not enough free seats are available. Hold is not complete.");
+		
 		SeatHold seatHold = new SeatHold();
 		seatHold.setCustomerEmail(customerEmail);
-		for(int rowIndex=0; rowIndex < ROWCOUNT; rowIndex++){
-			for(int columnIndex = 0; columnIndex < COLUMNCOUNT; columnIndex++){
+		for(int rowIndex=0; rowIndex < venue.getRowCount(); rowIndex++){
+			for(int columnIndex = 0; columnIndex < venue.getSeatsPerRow(); columnIndex++){
 				boolean foundAdjacentSeats = findAdjacentSeats(rowIndex, columnIndex, numSeats, seatHold);
 				if(foundAdjacentSeats){
 					seatsHoldMap.put(seatHold.getSeatHoldId(), seatHold);
@@ -90,13 +91,13 @@ public class TicketServiceImpl implements TicketService {
 		
 		//Adjacent Seats are not found. So allocate OPEN seats wherever available.
 		int seatsHold = 0;
-		for(int rowIndex=0; rowIndex < ROWCOUNT; rowIndex++){
-			for(int columnIndex = 0; columnIndex < COLUMNCOUNT; columnIndex++){
-				if(stadium.getSeats()[rowIndex][columnIndex].getStatus() == SeatStatus.OPEN){
+		for(int rowIndex=0; rowIndex < venue.getRowCount(); rowIndex++){
+			for(int columnIndex = 0; columnIndex < venue.getSeatsPerRow(); columnIndex++){
+				if(venue.getSeats()[rowIndex][columnIndex].getStatus() == SeatStatus.OPEN){
 					seatsHold++;
 					if(seatsHold <= numSeats){
-						seatHold.addToSeatsPutInHold(stadium.getSeats()[rowIndex][columnIndex]);
-						stadium.getSeats()[rowIndex][columnIndex].setStatus(SeatStatus.HOLD);
+						seatHold.addToSeatsPutInHold(venue.getSeats()[rowIndex][columnIndex]);
+						venue.getSeats()[rowIndex][columnIndex].setStatus(SeatStatus.HOLD);
 					}
 					else
 						break;
@@ -119,11 +120,11 @@ public class TicketServiceImpl implements TicketService {
 		SeatHold seatHold = seatsHoldMap.get(seatHoldId);
 		if(seatHold == null){
 			if(expiredSeatsHoldMap.get(seatHoldId) != null)
-				return "Reservation cannot be done. The temporary hold put on the seats expired.";
+				throw new ReservationException("Reservation cannot be done. The temporary hold put on the seats expired.");
 			else
-				return "Reservation cannot be done. Seat Hold Id that was supplied is not found.";
+				throw new ReservationException("Reservation cannot be done. Seat Hold Id that was supplied is not found.");
 		} else if(!seatHold.getCustomerEmail().equalsIgnoreCase(customerEmail)) {
-			return "Reservation cannot be done. The email on temporary hold: "+seatHold.getCustomerEmail()+" does not match the email provided: "+customerEmail;
+			throw new ReservationException("Reservation cannot be done. The email on temporary hold: "+seatHold.getCustomerEmail()+" does not match the email provided: "+customerEmail);
 		} else {
 			seatsHoldMap.remove(seatHoldId);
 			for(Seat seat : seatHold.getSeatsPutInHold())
@@ -138,17 +139,17 @@ public class TicketServiceImpl implements TicketService {
 	 */
 	private boolean findAdjacentSeats(int rowIndex, int columnIndex, int numSeats, SeatHold seatHold) {
 		int adjEmptySeatCount = 0;
-		if(columnIndex+numSeats <= COLUMNCOUNT){
+		if(columnIndex+numSeats <= venue.getSeatsPerRow()){
 			for(int numSeatIndex = 0; numSeatIndex < numSeats; numSeatIndex++){
-				if(stadium.getSeats()[rowIndex][columnIndex+numSeatIndex].getStatus() == SeatStatus.OPEN){
+				if(venue.getSeats()[rowIndex][columnIndex+numSeatIndex].getStatus() == SeatStatus.OPEN){
 					adjEmptySeatCount++;
 				}
 			}
 			
 			if(numSeats == adjEmptySeatCount){
 				for(int numSeatIndex = 0; numSeatIndex < numSeats; numSeatIndex++){
-					stadium.getSeats()[rowIndex][columnIndex+numSeatIndex].setStatus(SeatStatus.HOLD);
-					seatHold.getSeatsPutInHold().add(stadium.getSeats()[rowIndex][columnIndex+numSeatIndex]);
+					venue.getSeats()[rowIndex][columnIndex+numSeatIndex].setStatus(SeatStatus.HOLD);
+					seatHold.getSeatsPutInHold().add(venue.getSeats()[rowIndex][columnIndex+numSeatIndex]);
 				}
 				return true;
 			}
@@ -162,7 +163,7 @@ public class TicketServiceImpl implements TicketService {
 	private void validateHoldTime(){
 		for(Integer holdSetId : seatsHoldMap.keySet()){
 			SeatHold seatHold = seatsHoldMap.get(holdSetId);
-			if((System.currentTimeMillis() - seatHold.getHoldCreateTime())/(60*1000) >= ONE_MINUTE){
+			if((System.currentTimeMillis() - seatHold.getHoldCreateTime())/(60*1000) >= Constants.THRESHOLD_TIME){
 				seatsHoldMap.remove(holdSetId);
 				expiredSeatsHoldMap.put(holdSetId,seatHold);
 				for(Seat seat : seatHold.getSeatsPutInHold()){
