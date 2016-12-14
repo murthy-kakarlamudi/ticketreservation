@@ -21,24 +21,25 @@ This application lets a user hold and reserve seats for an event venue. Customer
 * git clone https://github.com/murthy-kakarlamudi/ticketreservation.git
 
 ## Steps to build the project
- ..* At the project root level, execute command ./mnvw.cmd clean package. This will create an executable jar 
+ * At the project root level, execute command ./mnvw.cmd clean package. This will create an executable jar 
 target\ticketreservation-0.0.1-SNAPSHOT.jar
 
 ## Steps to run the project 
 You can run the project using either of the below options:
-..* Based on the jar from the build in previous step, execute java -jar target\ticketreservation-0.0.1-SNAPSHOT.jar
-..* At the project root folder, execute ./mvnw spring-boot:run
+* Based on the jar from the build in previous step, execute java -jar target\ticketreservation-0.0.1-SNAPSHOT.jar
+* At the project root folder, execute ./mvnw spring-boot:run
 
 ## Steps to test the application from Swagger
-..* Run the project based on the steps listed in **"Steps to run the project"**
-..* Open the link *http://localhost:8080/swagger-ui.html* from a browser
-..* Click _List Operations_ for _Ticket Reservation Controller_
-..* There are 3 operations for **getAvailableSeats, hold, reserve**
+* Run the project based on the steps listed in **"Steps to run the project"**
+* Open the link **http://localhost:8080/swagger-ui.html** from a browser
+* Click _List Operations_ for _Ticket Reservation Controller_
+* There are 3 operations for **getAvailableSeats, hold, reserve**
 
 ## Steps to test the application from Command Line
-..* Run the project based on the steps listed in **"Steps to run the project"**
-..* This brings a series of interactive command prompts detailing the next steps around initializing the venue and displaying the Usage menu for SEARCH/HOLD/RESERVE operations.
+* Run the project based on the steps listed in **"Steps to run the project"**
+* This brings a series of interactive command prompts detailing the next steps around initializing the venue and displaying the Usage menu for SEARCH/HOLD/RESERVE operations.
 
-
-## See the results
+##Steps to generate Javadocs
+* At the project root location, execute mvn javadoc:javadoc command
+* Javadocs will be generated in **target/site/apidocs** folder
 
