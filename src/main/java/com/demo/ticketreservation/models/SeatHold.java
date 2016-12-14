@@ -13,9 +13,7 @@ public class SeatHold {
 	
 	private Timestamp holdCreateTime;
 	
-	private String customerEmail;
-	
-	private String errorMessage;
+	private Customer customer;
 	
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 	
@@ -57,21 +55,13 @@ public class SeatHold {
 		this.holdCreateTime = holdCreateTime;
 	}
 
-	public String getCustomerEmail() {
-		return customerEmail;
+	public Customer getCustomer() {
+		return customer;
 	}
 
-	public void setCustomerEmail(String customerEmail) {
-		this.customerEmail = customerEmail;
+	public void setCustomer(Customer customer) {
+		this.customer = customer;
 	}
 
-	public String getErrorMessage() {
-		return errorMessage;
-	}
-
-	public void setErrorMessage(String errorMessage) {
-		this.errorMessage = errorMessage;
-	}
-	
 	
 }

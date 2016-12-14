@@ -8,6 +8,7 @@ import com.demo.ticketreservation.api.TicketService;
 import com.demo.ticketreservation.exceptions.EmailValidationException;
 import com.demo.ticketreservation.exceptions.ReservationException;
 import com.demo.ticketreservation.exceptions.SeatHoldException;
+import com.demo.ticketreservation.models.Customer;
 import com.demo.ticketreservation.models.Seat;
 import com.demo.ticketreservation.models.SeatHold;
 import com.demo.ticketreservation.models.Venue;
@@ -33,6 +34,9 @@ public class TicketServiceImpl implements TicketService {
 	 */
 	private HashMap<Integer,SeatHold> seatsHoldMap;
 	
+	/*
+	 * Temporary data structure to hold expired SeatMap objects to report appropriate error 
+	 */
 	private HashMap<Integer,SeatHold> expiredSeatsHoldMap;
 	
 	/*
@@ -45,6 +49,9 @@ public class TicketServiceImpl implements TicketService {
 		expiredSeatsHoldMap = new HashMap<Integer,SeatHold>();
 	}
 	
+	/*
+	 * Constructor that takes rowCount and seatsPerRow as parameters.
+	 */
 	public TicketServiceImpl(int rowCount, int seatsPerRow){
 		venue = Venue.getInstance();
 		venue.initSeats(rowCount,seatsPerRow);
@@ -78,7 +85,7 @@ public class TicketServiceImpl implements TicketService {
 			throw new SeatHoldException("Not enough free seats are available. Hold is not complete.");
 		
 		SeatHold seatHold = new SeatHold();
-		seatHold.setCustomerEmail(customerEmail);
+		seatHold.setCustomer(new Customer(customerEmail));
 		for(int rowIndex=0; rowIndex < venue.getRowCount(); rowIndex++){
 			for(int columnIndex = 0; columnIndex < venue.getSeatsPerRow(); columnIndex++){
 				boolean foundAdjacentSeats = findAdjacentSeats(rowIndex, columnIndex, numSeats, seatHold);
@@ -105,7 +112,7 @@ public class TicketServiceImpl implements TicketService {
 			}
 		}
 		if(seatsHold!=numSeats)
-			seatHold.setErrorMessage("Seats cannot be hold due to unavilability of seats");
+			throw new SeatHoldException("Seats cannot be hold due to unavilability of seats");
 		else 
 			seatsHoldMap.put(seatHold.getSeatHoldId(), seatHold);
 		
@@ -123,8 +130,8 @@ public class TicketServiceImpl implements TicketService {
 				throw new ReservationException("Reservation cannot be done. The temporary hold put on the seats expired.");
 			else
 				throw new ReservationException("Reservation cannot be done. Seat Hold Id that was supplied is not found.");
-		} else if(!seatHold.getCustomerEmail().equalsIgnoreCase(customerEmail)) {
-			throw new ReservationException("Reservation cannot be done. The email on temporary hold: "+seatHold.getCustomerEmail()+" does not match the email provided: "+customerEmail);
+		} else if(!seatHold.getCustomer().getEmail().equalsIgnoreCase(customerEmail)) {
+			throw new ReservationException("Reservation cannot be done. The email on temporary hold: "+seatHold.getCustomer().getEmail()+" does not match the email provided: "+customerEmail);
 		} else {
 			seatsHoldMap.remove(seatHoldId);
 			for(Seat seat : seatHold.getSeatsPutInHold())
@@ -173,4 +180,11 @@ public class TicketServiceImpl implements TicketService {
 		}
 	}
 
+	/*
+	 * Getter Method that returns the member object venue
+	 */
+	public Venue getVenue() {
+		return venue;
+	}
+	
 }
