@@ -34,10 +34,10 @@ You can run the project using either of the below options:
 * Open the link **http://localhost:8080/swagger-ui.html** from a browser
 * Click _List Operations_ for _Ticket Reservation Controller_
 * Execute the operations in the below order:
-..* POST /venue - To initialize the venue. Specify the number of rows and seats per row in the request.
-..* GET /venue - Returns the number of seats available
-..* POST /reservation - Puts a hold on the reservation for the requested seats. Specify the number of seats and the email under which the hold needs to be under. Returns a hold id and the actual seat numbers put on hold.
-..* PUT /reservation - Update the hold to actual reservation. Provide the holdId from previous response and the exact email that was used to place the hold. Returns a reservation code.
+	* POST /venue - To initialize the venue. Specify the number of rows and seats per row in the request.
+	* GET /venue - Returns the number of seats available
+	* POST /reservation - Puts a hold on the reservation for the requested seats. Specify the number of seats and the email under which the hold needs to be under. Returns a hold id and the actual seat numbers put on hold.
+	* PUT /reservation - Update the hold to actual reservation. Provide the holdId from previous response and the exact email that was used to place the hold. Returns a reservation code.
 
 ## Steps to test the application from Command Line
 * Run the project based on the steps listed in **"Steps to run the project"**
