@@ -13,7 +13,8 @@ public class TestTicketService extends TestCase{
 	
 	@Test
 	public void testFirstTimeAllSeatsShouldBeEmpty(){
-		TicketServiceImpl testTicketService = new TicketServiceImpl(3,4);
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats(3, 4);
 		assertEquals(12,testTicketService.numSeatsAvailable());
 	}
 	
@@ -21,7 +22,8 @@ public class TestTicketService extends TestCase{
 	public void testIfAvailableShouldHoldAdjacentSeats(){
 		
 		int HOLD_SEATS = 2;
-		TicketServiceImpl testTicketService = new TicketServiceImpl(3,4);
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats(3, 4);
 		SeatHold seatHold = testTicketService.findAndHoldSeats(HOLD_SEATS, "test1@gmail.com");
 		
 		assertEquals(1, seatHold.getSeatsPutInHold().get(0).getSeatNumber());
@@ -38,6 +40,7 @@ public class TestTicketService extends TestCase{
 	public void testAfterThresholdTimeExpiresHoldShouldBeRemoved() throws Exception {
 		int HOLD_SEATS = 2;
 		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats();
 		SeatHold seatHold = testTicketService.findAndHoldSeats(HOLD_SEATS, "test1@gmail.com");
 		
 		assertEquals(1, seatHold.getSeatsPutInHold().get(0).getSeatNumber());
@@ -54,7 +57,8 @@ public class TestTicketService extends TestCase{
 	
 	@Test
 	public void testForSuccessfulHoldsTillSeatsAreEmptyNumSeatsAvailableShouldReturnZero(){
-		TicketServiceImpl testTicketService = new TicketServiceImpl(2,2);
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats(2, 2);
 		testTicketService.findAndHoldSeats(3, "test1@gmail.com");
 		testTicketService.findAndHoldSeats(1, "test2@gmail.com");
 		assertEquals(0,testTicketService.numSeatsAvailable());
@@ -65,6 +69,7 @@ public class TestTicketService extends TestCase{
 	@Test
 	public void testReserveSeatsForNonExistingHoldIdShouldFail() {
 		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats(2, 2);
 		try {
 			String code = testTicketService.reserveSeats(123, "test1@gmail.com");
 		} catch (RuntimeException re) {
@@ -74,10 +79,11 @@ public class TestTicketService extends TestCase{
 	
 	@Test
 	public void testMultipleInstantiationsShouldreturnSameVenue(){
-		TicketServiceImpl testTicketService1 = new TicketServiceImpl(2,3);
+		TicketServiceImpl testTicketService1 = new TicketServiceImpl();
+		testTicketService1.initSeats(2, 3);
 		Venue venue1 = testTicketService1.getVenue();
 		
-		TicketServiceImpl testTicketService2 = new TicketServiceImpl(2,3);
+		TicketServiceImpl testTicketService2 = new TicketServiceImpl();
 		Venue venue2 = testTicketService2.getVenue();
 		
 		assertTrue(venue1 == venue2);
@@ -86,12 +92,14 @@ public class TestTicketService extends TestCase{
 	@Test
 	public void testIfNoSeatCountsSpecifiedShouldUseDefaults(){
 		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats();
 		assertEquals(100, testTicketService.numSeatsAvailable());
 	}
 	
 	@Test
 	public void testMoreSeatsRequestedThanCapacityShouldReturnError(){
-		TicketServiceImpl testTicketService = new TicketServiceImpl(2,3);
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats(2,3);
 		try {
 			testTicketService.findAndHoldSeats(10, "test1@gmail.com");
 		} catch(RuntimeException re){
@@ -101,7 +109,8 @@ public class TestTicketService extends TestCase{
 	
 	@Test
 	public void testInvalidEmailShouldError(){
-		TicketServiceImpl testTicketService = new TicketServiceImpl(2,3);
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats(2,3);
 		try {
 			testTicketService.findAndHoldSeats(10, "test1gmail");
 		} catch(RuntimeException re){
@@ -111,7 +120,8 @@ public class TestTicketService extends TestCase{
 	
 	@Test
 	public void testReserveSeatsForValidHoldIdShouldSuccess(){
-		TicketServiceImpl testTicketService = new TicketServiceImpl(2,3);
+		TicketServiceImpl testTicketService = new TicketServiceImpl();
+		testTicketService.initSeats(2,3);
 		SeatHold seatHold = testTicketService.findAndHoldSeats(2, "test@gmail.com");
 		String code = testTicketService.reserveSeats(seatHold.getSeatHoldId(), "test@gmail.com");
 		
@@ -121,7 +131,8 @@ public class TestTicketService extends TestCase{
 	@Test
 	public void testReserveSeatsForNonMatchingEmailShouldFail(){
 		try {
-			TicketServiceImpl testTicketService = new TicketServiceImpl(2, 3);
+			TicketServiceImpl testTicketService = new TicketServiceImpl();
+			testTicketService.initSeats(2,3);
 			SeatHold seatHold = testTicketService.findAndHoldSeats(2, "test@gmail.com");
 			String code = testTicketService.reserveSeats(seatHold.getSeatHoldId(), "test1@gmail.com");
 		} catch (RuntimeException re) {

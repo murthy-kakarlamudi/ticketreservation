@@ -31,14 +31,14 @@ public class TicketReservationApplication {
 		return (args) -> {
 
 			// fetch all customers
+			TicketServiceImpl ticketService = new TicketServiceImpl();
 			Scanner sc = new Scanner(System.in);
 			log.info("Use below prompts to specify the Venue size:");
 			log.info("Enter Required Rows:");
 			int rows = sc.nextInt();
 			log.info("Enter Seats per Row:");
 			int seatsPerRow = sc.nextInt();
-
-			TicketServiceImpl ticketService = new TicketServiceImpl(rows, seatsPerRow);
+			ticketService.initSeats(rows, seatsPerRow);
 			usage();
 			while (true) {
 				try {

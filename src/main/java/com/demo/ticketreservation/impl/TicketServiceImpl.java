@@ -44,19 +44,17 @@ public class TicketServiceImpl implements TicketService {
 	 */
 	public TicketServiceImpl(){
 		venue = Venue.getInstance();
-		venue.initSeats();
 		seatsHoldMap = new HashMap<Integer,SeatHold>();
 		expiredSeatsHoldMap = new HashMap<Integer,SeatHold>();
 	}
 	
-	/*
-	 * Constructor that takes rowCount and seatsPerRow as parameters.
-	 */
-	public TicketServiceImpl(int rowCount, int seatsPerRow){
-		venue = Venue.getInstance();
-		venue.initSeats(rowCount,seatsPerRow);
-		seatsHoldMap = new HashMap<Integer,SeatHold>();
-		expiredSeatsHoldMap = new HashMap<Integer,SeatHold>();
+	
+	public void initSeats(){
+		venue.initSeats();
+	}
+	
+	public void initSeats(int rowCount, int seatsPerRow){
+		venue.initSeats(rowCount, seatsPerRow);
 	}
 
 	/*
@@ -101,8 +99,9 @@ public class TicketServiceImpl implements TicketService {
 		for(int rowIndex=0; rowIndex < venue.getRowCount(); rowIndex++){
 			for(int columnIndex = 0; columnIndex < venue.getSeatsPerRow(); columnIndex++){
 				if(venue.getSeats()[rowIndex][columnIndex].getStatus() == SeatStatus.OPEN){
-					seatsHold++;
-					if(seatsHold <= numSeats){
+					
+					if(seatsHold < numSeats){
+						seatsHold++;
 						seatHold.addToSeatsPutInHold(venue.getSeats()[rowIndex][columnIndex]);
 						venue.getSeats()[rowIndex][columnIndex].setStatus(SeatStatus.HOLD);
 					}
