@@ -48,11 +48,16 @@ public class TicketServiceImpl implements TicketService {
 		expiredSeatsHoldMap = new HashMap<Integer,SeatHold>();
 	}
 	
-	
+	/*
+	 * Initializes the venue with defaults
+	 */
 	public void initSeats(){
 		venue.initSeats();
 	}
 	
+	/*
+	 * Initializes the venue with the specified rows and seats per row
+	 */
 	public void initSeats(int rowCount, int seatsPerRow){
 		venue.initSeats(rowCount, seatsPerRow);
 	}

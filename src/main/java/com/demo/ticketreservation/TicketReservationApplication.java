@@ -4,14 +4,11 @@ import java.util.Scanner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 
-import com.demo.ticketreservation.api.TicketService;
 import com.demo.ticketreservation.impl.TicketServiceImpl;
 import com.demo.ticketreservation.models.SeatHold;
 

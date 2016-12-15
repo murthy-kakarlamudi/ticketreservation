@@ -24,17 +24,27 @@ public class TicketReservationController {
 	@Autowired
 	private TicketServiceImpl ticketService;
 	
+	/*
+	 * Endpoint to initialize the venue
+	 */
 	@RequestMapping(value = "/venue", method = RequestMethod.POST)
 	public void createVenue(@RequestBody() VenueRequest venue) {
 		ticketService.initSeats(venue.getRows(), venue.getSeatsPerRow());
         
     }
+	
+	/*
+	 * End point to get the available seats in the venue
+	 */
 	@RequestMapping(value = "/venue", method = RequestMethod.GET)
 	public VenueResponse getAvailableSeats() {
 		return new VenueResponse(ticketService.numSeatsAvailable());
         
     }
 	
+	/*
+	 * Endpoint to put a temporary hold on the seats.
+	 */
 	@RequestMapping(value = "/reservation", method = RequestMethod.POST)
 	public HoldResponse holdSeats(@RequestBody() HoldRequest request){
 		SeatHold seatHold = ticketService.findAndHoldSeats(request.getNumSeats(), request.getEmail());
@@ -43,6 +53,9 @@ public class TicketReservationController {
 		return new HoldResponse(seatHold.getSeatHoldId(),seats);
 	}
 	
+	/*
+	 * Endpoint to reserve the seats that were put on hold 
+	 */
 	@RequestMapping(value = "/reservation", method = RequestMethod.PUT)
 	public ReserveResponse reserveSeats(@RequestBody() ReserveRequest request){
 		return new ReserveResponse(ticketService.reserveSeats(request.getHoldId(), request.getEmail()));
